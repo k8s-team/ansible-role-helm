@@ -1,0 +1,48 @@
+---
+
+- name: Ensures {{ destFolder }} dir exists
+  file:
+    path: "{{ destFolder }}"
+    state: directory
+
+- name: Download and unpack helm-{{ version }}-linux-amd64.tar.gz
+  unarchive:
+    src: "https://storage.googleapis.com/kubernetes-helm/helm-{{ version }}-linux-amd64.tar.gz"
+    dest: "{{ destFolder }}"
+    remote_src: yes
+
+- name: Copy binaries
+  copy:
+    src: "{{ destFolder }}/linux-amd64/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    remote_src: yes
+    mode: a+x
+  loop:
+    - "helm"
+    - "tiller"
+
+- name: Copy files
+  copy:
+    src: "{{ item }}"
+    remote_src: no
+    dest: "{{ destFolder }}/{{ item }}"
+  loop:
+    - "rbac-tiller.yaml"
+    - "service-account.yaml"
+
+- name: Setup service account
+  k8s:
+    state: present
+    src: "{{ destFolder }}/{{ item }}"
+  loop:
+    - "rbac-tiller.yaml"
+  register: srv
+
+- name: Setup stat
+  stat:
+    path: "{{ ansible_env.HOME }}/.helm"
+  register: settings
+
+- name: Init Helm
+  shell: helm init --service-account tiller --wait
+  when: settings.stat.exists == False

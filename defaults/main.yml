@@ -1,0 +1,4 @@
+---
+# defaults file for k8s-singlenode
+version: v2.12.3
+destFolder: "{{ ansible_env.HOME }}/.k8s-team/helm"

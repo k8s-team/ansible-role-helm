@@ -1,0 +1,10 @@
+---
+# tasks file for k8s-singlenode
+
+- name: Install k8s-singlenode | (Debian)
+  include_tasks: Debian-install.yml
+  when: ansible_os_family == "Debian" and state == "present"
+
+- name: Uninstall k8s-singlenode | (Debian)
+  include_tasks: Debian-uninstall.yml
+  when: ansible_os_family == "Debian" and state == "absent"

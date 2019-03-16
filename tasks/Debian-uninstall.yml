@@ -1,0 +1,41 @@
+---
+
+- name: Check that {{ ansible_env.HOME }}/.helm exists
+  stat:
+    path: "{{ ansible_env.HOME }}/.helm"
+  register: settings
+
+- name: Reset Helm
+  shell: helm reset --force
+  when: settings.stat.exists
+
+- name: Check that {{ destFolder }} exists
+  stat:
+    path: "{{ destFolder }}"
+  register: setup
+
+- name: Uninstall service account
+  k8s:
+    state: absent
+    src: "{{ destFolder }}/{{ item }}"
+  loop:
+    - "rbac-tiller.yaml"
+  when: setup.stat.exists == True
+
+- name: Remove binaries
+  file:
+    path: "/usr/bin/{{ item }}"
+    state: absent
+  loop:
+    - "helm"
+    - "tiller"
+
+- name: Remove {{ destFolder }}
+  file:
+    path: "{{ destFolder }}"
+    state: absent
+
+- name: Remove Helm setting
+  file:
+    path: "{{ ansible_env.HOME }}/.helm"
+    state: absent
